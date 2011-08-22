@@ -1,0 +1,12 @@
+useDynLib(ANN)
+
+export(
+ANNGA,
+ANNGA.default,
+print.ANN,
+plot.ANN,
+predict.ANN
+)
+
+#importFrom( utils, capture.output )
+

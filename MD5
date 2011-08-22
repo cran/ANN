@@ -1,0 +1,13 @@
+988f973d21bc5975dc89a2f015ec21a5 *DESCRIPTION
+60443624abaff6a9bc4f35dc0291cce4 *NAMESPACE
+cd7bc5ad611104b43d711e55ab88a005 *R/ANNGA.R
+36e3e15685f1fa38ce2bf323d62dbd50 *man/ANN-package.Rd
+da9c8f6f4b74d4c2b35dbe5b4095eca0 *man/ANNGA.Rd
+9507bca72f31e297596b2b7fd32511dd *man/predict.ANNGA.Rd
+b2eba4f5d83e0f78e4ed9f840b580a80 *src/ANNGA.cpp
+b9c865aad696453fb6dd0befe7e91d9d *src/Makevars
+b84ac892f5c7438e767ccde0a9a7fdd6 *src/Makevars.win
+15ec9a3b7584a28d6af8038d2c29a6c7 *src/files/ANN.cpp
+25889e0971812b6727994bcc99fb47a8 *src/files/ANN.h
+03bc9da2dd92c4c60d7251cdc0f7f39b *src/files/Training.cpp
+506d0898514aa10a8dabf859a8d79219 *src/files/Training.h
