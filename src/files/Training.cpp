@@ -23,10 +23,15 @@
 #include "Training.h"
 #include "fstream"
 #include "iostream"
-#include <omp.h> // Include OpenMP
+
 #include <R.h>
 #include <Rmath.h>
 #include <vector>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 
 using namespace std;
 
@@ -102,7 +107,7 @@ ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double
 			 //create population vectors
 			 mChromosomes = new Chromosome[mPopulationSize];
 			int ii;
-			#pragma omp parallel for private(ii) 
+			//#pragma omp parallel for private(ii) 
 			 for(ii = 0 ; ii < mPopulationSize ; ii++){
 				 mChromosomes[ii] = new double[mWeightConNum];
 				mFitnessValues[ii] = 0; //CAREFUL!! maybe u should initialize to some other value
@@ -120,7 +125,7 @@ ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double
 			dataOut = new double*[nbOfData];
 			outputANN = new double*[nbOfData];
 
-			#pragma omp parallel for private(ii)
+			//#pragma omp parallel for private(ii)
 			for(ii = 0 ; ii < nbOfData ; ii++){
 				dataIn[ii] = new double[nbOfInput];
 				dataOut[ii] = new double[nbOfOutput];
@@ -267,7 +272,7 @@ void	ANNTraining::crossover(int v){
 
 	double ran;
 	int i;
-	#pragma omp  parallel for   private(i,ran) 
+	//#pragma omp  parallel for   private(i,ran) 
 	for( i = 0 ; i < mWeightConNum ; i++){
  		GetRNGstate();
 		ran = unif_rand();

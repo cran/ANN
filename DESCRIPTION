@@ -2,8 +2,8 @@ Package: ANN
 Type: Package
 Title: Feedforward Artificial Neural Network optimized by Genetic
         Algorithm
-Version: 0.1
-Date: 2011-08-22
+Version: 0.1.1
+Date: 2011-10-25
 Author: Francis Roy-Desrosiers, based on CUDAANN r6 project developed
         by Emre Caglar.
 Maintainer: Francis Roy-Desrosiers <francis.roy.desrosiers@gmail.com>
@@ -16,6 +16,6 @@ Depends: R (>= 2.11.0), Rcpp (>= 0.9.0), RcppClassic
 LinkingTo: RcppClassic, Rcpp
 License: GPL-3
 LazyLoad: yes
-Packaged: 2011-10-19 19:50:10 UTC; ipad
+Packaged: 2011-10-27 04:26:47 UTC; ipad
 Repository: CRAN
-Date/Publication: 2011-10-20 08:46:02
+Date/Publication: 2011-10-27 06:53:03

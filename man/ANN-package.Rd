@@ -15,7 +15,7 @@ This package provides a feedforward Artificial Neural Network (ANN)
 \tabular{ll}{
 Package: \tab ANN\cr
 Type: \tab Package\cr
-Version: \tab 0.1 Beta\cr
+Version: \tab 0.1.1 Beta\cr
 Date: \tab 2011-08-22\cr
 License: \tab GPL-3 \cr
 LazyLoad: \tab yes\cr
@@ -56,16 +56,7 @@ Maintainer: Francis Roy-Desrosiers <francis.roy.desrosiers at gmail.com>
 }
 
 \note{
-In order to use this package with multiple cores, the user must open the "Makevars" in the source code and follow the instructions. 
-Then you will need to compile the C++ code,  open a terminal, and type:
-
-cd "/path..." 
-
-where "/path..." is the path to the source code. Then compile the code. 
-
-R CMD INSTALL "nameOfTheFileWhereTheSourceCodeIs"
-
-The "Makevars" has been built for Linux, unfortunatly  for Windows users. If anybody wants to make a "Makevars.win" for Windows or  develop this package, I will be more than happy to accept your contribution and add your name as a contributor. 
+I would be more than happy to accept your contribution and add your name as a contributor. 
 }
 \references{
 Cross Ss, Harrison Rf, Kennedy RL.. Introduction to neural networks. Lancet 1995; 346: 1075-1079. 

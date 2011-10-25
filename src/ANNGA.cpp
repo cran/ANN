@@ -145,7 +145,7 @@ RcppExport SEXP ANNGA(SEXP matrixInput,
 	double  dendmutation=ANNT->mfMutationRate;
 
 	RcppVector<double> rcppVectorFitness(ANNT->vectorFitness.size());
-	for (int i=0; i<ANNT->vectorFitness.size(); i++) {
+	for (int i=0; i<(int)ANNT->vectorFitness.size(); i++) {
 		//rcppVectorFitness(i) = ANNT->vectorFitness(i);
 		rcppVectorFitness(i) = ANNT->vectorFitness[i];	
 	}
@@ -216,6 +216,7 @@ RcppExport SEXP predictANNGA(SEXP matrixInput,SEXP design, SEXP gene) {
 	for (int i=0; i<nbOfLayer; i++) {
 	    nbNeuronPerLayer[i] = vecNeuronPerLayer(i);
 	}
+	int kOut = vecNeuronPerLayer(nbOfLayer-1);
 
 	RcppVector<double> RcppGene(gene);
 	int nbOfConnections = RcppGene.size();
@@ -223,14 +224,15 @@ RcppExport SEXP predictANNGA(SEXP matrixInput,SEXP design, SEXP gene) {
 	for (int i=0; i<nbOfConnections; i++) {
 	    cppGene[i] = RcppGene(i);
 	}
+	
 
 	ANNTraining *ANNT= new ANNTraining(nbOfLayer , nbNeuronPerLayer ,lengthData, matIn);
 	ANNT->ann->loadWights (cppGene);
 	ANNT->predictANN();
 
-	RcppMatrix<double> output(lengthData, kIn);
+	RcppMatrix<double> output(lengthData, kOut);
 	for (int i=0; i<lengthData; i++) {
-	    for (int j=0; j<kIn; j++) {
+	    for (int j=0; j<kOut; j++) {
 		output(i,j) = ANNT->outputANN[i][j];
 	    }
 	}

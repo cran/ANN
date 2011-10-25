@@ -159,7 +159,7 @@ while(kk< nbCycleGaussBest && mFitnessValues[bestIndividual]>error)\{
 
 Explanation of the code: the program enters in a \code{while} loop and it will run until one of the two conditions happen to be \code{false}. The two conditions that need to be filled are: the fitness of the best chromosome should be smaller than the \code{error} chosen and the number of generations should be equal to the maximum number of generations chosen in \code{maxGen}. When these conditions are not filled, generations of normal cycles occur. The number set in \code{nbCycleGauss} provides the number of normal cycles before one gaussian cycle is processed. The gaussian cycles refine  all chromosomes with Gaussian random distribution number. 
 
-Once one of the two conditions is filled  refinements around the best chromosone can be made. This can improve the result but generalisation could be affected. The refinement around the best chromosome has two conditions that need to be filled: the fitness of the best chromosome should be smaller than the error chosen and the number of generations should be equal to the maximum number of generations chosen in \code{nbCycleGaussBest}.
+Once one of the two conditions is filled  refinements around the best chromosone can be made. This can improve the fitness result but generalisation could be affected. The refinement around the best chromosome has two conditions that need to be filled: the fitness of the best chromosome should be smaller than the error chosen and the number of generations should be equal to the maximum number of generations chosen in \code{nbCycleGaussBest}.
 
 
 

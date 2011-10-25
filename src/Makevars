@@ -1,14 +1,16 @@
-## Emacs please make this a -*- mode: Makefile; -*-
+## Hey Emacs make this a -*- mode: makefile; -*- file 
 ##
-## Use the R_HOME indirection to support installations of multiple R version
-#
-#comment these lines if you want to compile for multiple cores
-
-PKG_CXXFLAGS=-I../inst/include  
-PKG_LIBS =  `$(R_HOME)/bin/Rscript  -e "Rcpp:::LdFlags()"` `$(R_HOME)/bin/Rscript  -e "RcppClassic:::LdFlags()"  `  
-
+## -- compiling for OpenMP 
+#PKG_CXXFLAGS=-fopenmp
+##
+## -- linking for OpenMP
+#PKG_LIBS= -fopenmp -lgomp $(shell $(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()") $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(shell $(R_HOME)/bin/Rscript  -e "RcppClassic:::LdFlags()")  
 
 
-#uncomment these lines if you want to compile for multiple cores
-#PKG_CXXFLAGS=-fopenmp 
-#PKG_LIBS = -lgomp `$(R_HOME)/bin/Rscript  -e "Rcpp:::LdFlags()"` `$(R_HOME)/bin/Rscript  -e "RcppClassic:::LdFlags()" ` 
+
+
+PKG_CXXFLAGS= $(SHLIB_OPENMP_CXXFLAGS)
+##
+## -- linking for OpenMP
+PKG_LIBS= $(SHLIB_OPENMP_CXXFLAGS)  $(shell $(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()") $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) $(shell $(R_HOME)/bin/Rscript  -e "RcppClassic:::LdFlags()")  
+

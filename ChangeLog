@@ -1,0 +1,16 @@
+2011-10-25  Francis Roy-Desrosiers  <francis.roy.desrosiers@gmail.com>
+
+	* DESCRIPTION: Release 0.1.1
+
+	* src/ANNGA.cpp : 		modified
+	* src/Makevars  : 		modified
+	* src/Makevars.win : 		modified
+	* man/ANN-package.Rd : 		modified
+	* src/files/Training.cpp : 	modified 
+
+
+2011-10-20  Francis Roy-Desrosiers  <francis.roy.desrosiers@gmail.com>
+
+	* DESCRIPTION: Release 0.1
+
+
