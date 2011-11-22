@@ -18,15 +18,37 @@
 ## along with ANN.  If not, see <http:##www.gnu.org/licenses/>.
 ####################################################################
 
+
+
+
+
+
 ANNGA <-
-function(x, ...)UseMethod("ANNGA")
+function(x,
+ 	y, 
+	design=c(1,3,1),
+	population=500,
+	mutation=0.3,
+	crossover=0.7,
+	maxW=25,
+	minW=-25,
+	maxGen=1000,
+	error=0.05,
+	iMaxGenerationSameResult=100,
+	bMaxGenerationSameResult=TRUE,
+	bCycleGauss=FALSE,
+	nbCycleGauss=1,
+	nbCycleGaussBest=0,
+	sigma=1,
+	probGauss=0.5,
+	printBestChromosone=TRUE,...)UseMethod("ANNGA")
 
 
 ANNGA.default <-
 function(x,
  	y, 
 	design=c(1,3,1),
-	maxPop=500,
+	population=500,
 	mutation=0.3,
 	crossover=0.7,
 	maxW=25,
@@ -42,37 +64,42 @@ function(x,
 	probGauss=0.5,
 	printBestChromosone=TRUE,...) {
 
+
+	cores=1 #openMP code were added but not operationnal, still in developpement.
 	input <- as.matrix(x)
 	output <- as.matrix(y)
 	if(any(is.na(x))) stop("missing values in 'x'")
 	if(any(is.na(y))) stop("missing values in 'y'")
 	if(dim(x)[1L] != dim(y)[1L]) stop("nrows of 'y' and 'x' must match")
 	if(dim(input)[1L] <=0) stop("nrows of 'x' and 'y' must be >0 ")
-	if (maxPop<20){
-		cat("The population should be over 20,maxPop=",maxPop, "  , the default population is 200   \n")
-		maxPop<-200
+	if (population<20){
+		cat("The population should be over 20,maxPop=",population, "  , the default population is 100   \n")
+		population<-100
 	}
 	if(sigma<=0) stop("'sigma' must be positive")
+	if(!(probGauss>=0 & probGauss<=1)) stop("'probGauss' must be in [0,1]")
+	if(cores<=0) stop("'cores' must be positive")
 	   
-	est <- .Call("ANNGA" ,              
+	est <- .Call('ANNGA' ,              
                 x,
 		y, 
-		design,
-		maxPop,
-		mutation,
-		crossover,
-		maxW,
-		minW,
-		maxGen,
-		error,
-		iMaxGenerationSameResult,
-		bMaxGenerationSameResult,
-		bCycleGauss,
-		nbCycleGauss,
-		nbCycleGaussBest,
-		sigma,
-		probGauss,
-		printBestChromosone,
+		as.integer(design),
+		as.integer(population),
+		as.numeric(mutation),
+		as.numeric(crossover),
+		as.numeric(maxW),
+		as.numeric(minW),
+		as.integer(maxGen),
+		as.numeric(error),
+		as.integer(iMaxGenerationSameResult),
+		as.integer(bMaxGenerationSameResult),
+		as.integer(bCycleGauss),
+		as.integer(nbCycleGauss),
+		as.integer(nbCycleGaussBest),
+		as.numeric(sigma),
+		as.numeric(probGauss),
+		as.integer(printBestChromosone),
+		as.integer(cores),
                 PACKAGE="ANN")
 
 	if(dim(output)[2]==1){est$R2<-1-sum((output-est$output)^2)/sum((output-mean(output))^2)}else{est$R2<-NULL}
@@ -116,6 +143,8 @@ function(object,input,...)
 	est <- .Call("predictANNGA",               # either new or classic
 		         input, object$nbNeuronPerLayer,object$bestChromosome,
 		         PACKAGE="ANN")
+	est$callpredict <- match.call()
+	class(est) <- "ANN"
 	est
 }
 

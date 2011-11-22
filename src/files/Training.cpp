@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////
 // Training.cpp: Artificial Neural Network optimized by Genetic Algorithm 
-// Based on CUDAANN project
+// Based on CUDAANN r6 project
 // Copyright (C) 2011 Francis Roy-Desrosiers
 //
 // This file is part of ANN.
@@ -28,9 +28,10 @@
 #include <Rmath.h>
 #include <vector>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
+
 
 
 using namespace std;
@@ -57,7 +58,8 @@ int final = ((int)(unif_rand() * (upper - lower + 1)) + lower);
 
 
 //Constructor for ANNGA.default
-ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double **tmatIn,double **tmatOut,int iMaxPopulation,double dmutRate,double dcrossRate,double dminW,double dmaxW, int iMaxGenerationSameResult,bool bMaxGenerationSameResult,double passSigma, double passProbGauss, bool rprintBestChromosome){		
+ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double **tmatIn,double **tmatOut,int iMaxPopulation,double dmutRate,double dcrossRate,double dminW,double dmaxW, int iMaxGenerationSameResult,bool bMaxGenerationSameResult,double passSigma, double passProbGauss, bool rprintBestChromosome, int passCores){	
+		
 			mPopulationSize		= iMaxPopulation;
 			mfMutationRate		= dmutRate;
 			maxGenerationSameResult	= iMaxGenerationSameResult;
@@ -80,8 +82,13 @@ ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double
 			lastGenerationBest=999999999; //initialisation to this number because no population should be that size
 			generationSameResult=0;
 			
+			num_of_threads = passCores;
 
 
+			//#ifdef _OPENMP
+			//omp_set_num_threads(num_of_threads);
+			//#endif
+			
 
 			ann = new ArtificialNeuralNetwork(nbLayers,neuronPerLayer);
 
@@ -107,7 +114,7 @@ ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double
 			 //create population vectors
 			 mChromosomes = new Chromosome[mPopulationSize];
 			int ii;
-			//#pragma omp parallel for private(ii) 
+			 
 			 for(ii = 0 ; ii < mPopulationSize ; ii++){
 				 mChromosomes[ii] = new double[mWeightConNum];
 				mFitnessValues[ii] = 0; //CAREFUL!! maybe u should initialize to some other value
@@ -125,13 +132,14 @@ ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double
 			dataOut = new double*[nbOfData];
 			outputANN = new double*[nbOfData];
 
-			//#pragma omp parallel for private(ii)
+			
 			for(ii = 0 ; ii < nbOfData ; ii++){
 				dataIn[ii] = new double[nbOfInput];
 				dataOut[ii] = new double[nbOfOutput];
 				outputANN[ii] = new double[nbOfOutput];
 				for(int j = 0 ; j < nbOfInput ; j++){
-					dataIn[ii][j]  = tmatIn[ii][j];
+					//dataIn[ii][j]  = tmatIn[ii][j];
+				dataIn[ii][j]=tmatIn[ii][j];				
 				}
 				for(int j = 0 ; j < nbOfOutput ; j++){
 					dataOut[ii][j] = tmatOut[ii][j];
@@ -198,6 +206,7 @@ ANNTraining::~ANNTraining(){}
 void ANNTraining::calculateAllFitnessOfPopulation (){
 	
 	meanFitness=0;
+	
 	for(int i = 0 ; i < mPopulationSize ; i++){
 		mFitnessValues[i] =getFitness (mChromosomes[i]);
 		meanFitness= meanFitness + mFitnessValues[i];
@@ -229,9 +238,9 @@ void ANNTraining::calculateAllFitnessOfPopulation (){
 }
 ////////////////////////////////////////////
 
-void ANNTraining::printFitness (){
+/*void ANNTraining::printFitness (){
 	cout<<"generation: "<<mGenerationNumber<<"  min fitness value: "<<getMinFitness () <<endl;
-}
+}*/
 
 
 ////////////////////////////////////////////
@@ -262,7 +271,7 @@ void	ANNTraining::mutate(int v){
 	}while(r1 == r2 || r1 == r3 || r2 == r3 || r1 == v || r2 == v || r3 == v);
 
 	int i;
-	#pragma omp  parallel for   private(i) 
+	
 	for( i = 0 ; i < mWeightConNum ; i++){
 		diff[i] = mChromosomes[r1][i] + (mutRate * (mChromosomes[r3][i] - mChromosomes[r2][i]));
 	}
@@ -272,7 +281,7 @@ void	ANNTraining::crossover(int v){
 
 	double ran;
 	int i;
-	//#pragma omp  parallel for   private(i,ran) 
+	
 	for( i = 0 ; i < mWeightConNum ; i++){
  		GetRNGstate();
 		ran = unif_rand();
@@ -286,9 +295,10 @@ void	ANNTraining::crossover(int v){
 }
 ////////////////////////////////////////////
 void		ANNTraining::select(int v){
+	//Here the getFitness (mChromosomes[v]) should be the same as mFitnessValues[v]
 	if(getFitness (crossedTrialIndividual) < getFitness (mChromosomes[v])){
 		int i;
-		#pragma omp  parallel for   private(i) 
+		 
 		for( i = 0 ; i < mWeightConNum ; i++){
 			mChromosomes[v][i] =crossedTrialIndividual[i];
 		}	
@@ -300,7 +310,7 @@ void	ANNTraining::crossoverGauss(int v){
 	//if(!(bestIndividual==v)){
 	double ran;
 	int i;
-	#pragma omp  parallel for   private(i,ran) 
+	
 	for(i = 0 ; i < mWeightConNum ; i++){
  		GetRNGstate();
 		ran = unif_rand();
@@ -319,7 +329,7 @@ void	ANNTraining::crossoverGaussBest(int v){
 	//if(!(bestIndividual==v)){
 	double ran;
 	int i;
-	#pragma omp  parallel for   private(i,ran) 
+	
 	for(i = 0 ; i < mWeightConNum ; i++){
 		GetRNGstate();
 		ran = unif_rand();

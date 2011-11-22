@@ -28,17 +28,17 @@ public:
 	ArtificialNeuralNetwork(int numOfLay, int* numOfNeurunsInEachLayer);
 	~ArtificialNeuralNetwork();
 	
-	void	feedForward			(double* input);	
-	double	getOutput			(int index);	//gets the output of i th neuron in output layer
-	double  getMeanSquareError		(double* target);		//gets the MSE value of the net
-	void	loadWights			(double*);
-	void	release();
+	void					feedForward(double* input);	
+	double					getOutput(int index);	//gets the output of i th neuron in output layer
+	double  				getMeanSquareError(double* target);		//gets the MSE value of the net
+	void					loadWights(double*);
+	void					release();
 
 	/***************************************************************************/
 	/* Neuron values are stored in a 2D array.Simply, [2][3] means the value of*/
 	/*  neuron which is 3th layer and 4th neuron. (indexing starts from 0)     */
 	/***************************************************************************/
-	double **	m_neuronValues; 
+	double **				m_neuronValues; 
 
 	/***************************************************************************/
 	/* weights between neurons.It is represented with a 3D array.Indexing      */

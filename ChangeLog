@@ -1,16 +1,34 @@
+2011-11-18  Francis Roy-Desrosiers  <francis.roy.desrosiers@gmail.com>
+
+	* DESCRIPTION: Release 0.1.2
+
+	* src/ANNGA.cpp : 		bug fixed.
+	* demo/  :			To reduce computing time, examples has been transfered to the demo. 
+	* data/dataANN.RData  : 	To access the results of the demo without having to compute them.
+	* man/ :			The demoResultANN.Rd have been added and the other files have been re-organised.
+	* src/files/Training.cpp :	bug fixed, "cout" removed.
+	* src/ANNGA.cpp : 		OpenMP codes were added but are not yet operationnal, still in development for the next version.
+	* src/Makevars  : 		Makevars removed because not using Rcpp and openMP is suspended.
+	* src/Makevars.win : 		Makevars.win removed because not using Rcpp. 
+	
+
+
 2011-10-25  Francis Roy-Desrosiers  <francis.roy.desrosiers@gmail.com>
 
 	* DESCRIPTION: Release 0.1.1
 
-	* src/ANNGA.cpp : 		modified
-	* src/Makevars  : 		modified
+	* src/ANNGA.cpp : 		bug fixed
+	* src/Makevars  : 		add openmp 
 	* src/Makevars.win : 		modified
 	* man/ANN-package.Rd : 		modified
-	* src/files/Training.cpp : 	modified 
+	* src/files/Training.cpp : 	add openmp code
 
 
 2011-10-20  Francis Roy-Desrosiers  <francis.roy.desrosiers@gmail.com>
 
 	* DESCRIPTION: Release 0.1
+
+
+
 
 

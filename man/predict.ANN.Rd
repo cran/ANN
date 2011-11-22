@@ -2,26 +2,16 @@
 \alias{predict}
 \alias{predict.ANN}
 \title{Predict the output with an ANN already optimised.}
-\description{
-	  Once the Artificial Neural Network is optimized, the output can be predicted.
-}
-
+\description{Once the Artificial Neural Network is optimized, the output can be predicted.}
 
 \usage{
-predict.ANN(object,
-		input,...)
+\method{predict}{ANN}(object, input,...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{object}{
-	This function needs an object of class "ANN", an already optimized ANN.
-}
-  \item{input}{
-	Input  inserted into the ANN  to predict outputs. 
-}
-  \item{\dots}{
-    
-}
+  \item{object}{Object of class "ANN", an already optimized ANN.}
+  \item{input}{Input inserted into the ANN  to predict outputs.}
+  \item{\dots}{not used}
 }
 %\details{
 %  to be continued...
@@ -72,22 +62,17 @@ par( mfrow=c(2,2) )
                 plot(output, main="sin + 0.5 * rnorm in [0,1]")
                 plot(input, main="input should be in the range [0,1]")
 
-set.seed(123)
-res             <-ANNGA(x    =input,
-                y       =output,
-                design  =c(1, 3, 1),
-                maxPop  =100,
-                maxGen  =1000,
-                error   =0.001,
-	        bCycleGauss=FALSE,
-	        sigma=0.5,
-                nbCycleGauss=1)
+
+data("dataANN")
+demoResultANN
+ANNObject<-demoResultANN[[3]]
+#to compute demoResultANN use :demo(ANNGA)
 
 par( mfrow=c(1,1) )
-print(res)
-plot(res)
+print(ANNObject)
+plot(ANNObject)
 
-predictRes      <-predict( res, input )
+predictRes      <-predict( ANNObject, input )
 plot(predictRes$output,main="Predicted Output")
 
 

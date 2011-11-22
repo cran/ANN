@@ -8,5 +8,4 @@ plot.ANN,
 predict.ANN
 )
 
-#importFrom( utils, capture.output )
 

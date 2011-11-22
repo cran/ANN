@@ -20,7 +20,6 @@
 ////////////////////////////////////////////////////////////////////
 
 #include "ANN.h"
-//#include <ctime>
 #include <cstdlib>
 #include <cmath>
 #include <fstream>
@@ -62,7 +61,7 @@ ArtificialNeuralNetwork::ArtificialNeuralNetwork(int numOfLay, int *numOfNeuruns
 	for(int i = 1 ; i < m_numberOfLayers ; i++){
 		for(int j = 0 ; j <  m_numOfNeurons[i] ; j++){
 			for(int k = 0 ; k < m_numOfNeurons[i-1]+1 ; k++){
-				m_neuronWeights[i][j][k]=0/*(double)(rand())/(RAND_MAX/2) - 1*/;//32767
+				m_neuronWeights[i][j][k]=0;   /*(double)(rand())/(RAND_MAX/2) - 1//32767*/
 			}
 		}
 	}
@@ -143,7 +142,7 @@ double ArtificialNeuralNetwork::getMeanSquareError(double* target){
 
 		double mse=0;
 		int i;
-		#pragma omp  parallel for   private(i) reduction(+: mse) 
+		//#pragma omp  parallel for   private(i) reduction(+: mse) 
 		for( i = 0 ; i < m_numOfNeurons[m_numberOfLayers-1] ; i++){
 			mse = mse + (target[i]-m_neuronValues[m_numberOfLayers-1][i])*(target[i]-m_neuronValues[m_numberOfLayers-1][i]);
 		}

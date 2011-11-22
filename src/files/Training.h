@@ -32,8 +32,8 @@ typedef double* Chromosome;
 class ANNTraining{
 
 public:	// to train the network
-	ANNTraining(int nbLayers , int * neuronPerLayer ,int lengthData, double **tmatIn, double **tmatOut,  int iMaxPopulation, double dmutRate, double dcrossRate ,double dminW, double dmaxW,int iMaxGenerationSameResult,bool bMaxGenerationSameResult,double passSigma, double passProbGauss, bool rprintBestChromosome); 
-	
+	ANNTraining(int nbLayers , int * neuronPerLayer ,int lengthData, double **tmatIn, double **tmatOut,  int iMaxPopulation, double dmutRate, double dcrossRate ,double dminW, double dmaxW,int iMaxGenerationSameResult,bool bMaxGenerationSameResult,double passSigma, double passProbGauss, bool rprintBestChromosome, int passCores); 
+//	ANNTraining(int nbLayers , int * neuronPerLayer ,int lengthData, double *tmatIn, double *tmatOut,  int iMaxPopulation, double dmutRate, double dcrossRate ,double dminW, double dmaxW,int iMaxGenerationSameResult,bool bMaxGenerationSameResult,double passSigma, double passProbGauss, bool rprintBestChromosome, int passCores); 	
 	// to predict from a trained the network
 	ANNTraining(int nbLayers , int * neuronPerLayer ,int lengthData, double **tmatIn); 
 	
@@ -86,7 +86,8 @@ public:	// to train the network
 	double		lastGenerationBest;
 	int 		maxGenerationSameResult;
 	bool		boolMaxGenerationSameResult;
-	bool		printBestChromosome;	
+	bool		printBestChromosome;
+	int 		num_of_threads;	
 	
 	ArtificialNeuralNetwork* ann;
 	double* 	trainInput;

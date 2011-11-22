@@ -1,19 +1,17 @@
 \name{ANNGA}
 \alias{ANNGA}
 \alias{ANNGA.default}
-\alias{plot.ANN}
-\alias{print.ANN}
-\title{Calling the C++ code to create an ANN and to optimize it by GA}
+\title{Optimize an ANN by GA}
 \description{
   This function uses a feedforward Artificial Neural Network 
 	optimized by Genetic Algorithm to minimize the mean squared error. 
 }
 
 \usage{
-ANNGA.default(	x,
+ANNGA	(	x,
 		y,
 		design = c(1, 3, 1),
-		maxPop = 500,
+		population = 500,
 		mutation = 0.3,
 		crossover = 0.7,
 		maxW = 25,
@@ -27,7 +25,8 @@ ANNGA.default(	x,
 		nbCycleGaussBest=0,
 		sigma=1,
 		probGauss=0.5,
-		printBestChromosone=TRUE,...)
+		printBestChromosone=TRUE,
+		...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -49,7 +48,7 @@ ANNGA.default(	x,
 	Example 2: design = c(5, 3, 2, 1) five inputs, two hidden layers, the first one with three neurons, the second one with two neurons
 	 and one neuron in the output layer.
 }
-  \item{maxPop}{
+  \item{population}{
      The number of chromosomes in the population of each generation.
 }
   \item{mutation}{
@@ -110,6 +109,9 @@ ANNGA.default(	x,
 	For a better understanding, this option prints the weight of the best chromosome
 	for each generation. 
 }
+%   \item{cores}{
+%	Number of cores to be used, if the number is greater than your CPU number of cores, then your number will be set to your CPU number of cores.
+%}
   \item{\dots}{
     
 }
@@ -117,7 +119,7 @@ ANNGA.default(	x,
 }
 \details{
 
-This package offers two variants of the Genetic Algorithms. The first one refines the weights around the best chromosome. The second one refines the weights  around each chromosome.
+This package offers two variants of Genetic Algorithms. The first, refines the weights around the best chromosome and the second, refines the weights  around each chromosome.
 
 
 I developed the algorithm to improve  the fitness of the  population of chromosomes   with weights derived from its best chromosomes. Eventualy, the GA will no longer improve the fitness during the evolution of the generations. One way of getting a better fitness is to create a new population from the weights of the best chromosome in combination with random numbers from the Gaussian distribution. This algorithm uses the \code{probGauss} as the probability of adding, or not, a Gaussian random number, with mean equal to zero and variance equal to the \code{sigma}, to the weights from the best chromosome.
@@ -126,7 +128,7 @@ I developed the algorithm to improve  the fitness of the  population of chromoso
 The algorithm used to improve the fitness of the  population of chromosomes   with weights derived from the same population was created from a partnership with Maxime Leroux.
 It uses the same logic with the Gaussian distribution as above but  derived from the entire population of chromosomes. It converges more slowly than the previous variant (around the best chromosome) but pursues the objective of finding the global minimum of the mean squared error. Once the original Genetic Algorithm and the Genetic Algorithm with Gaussian random number around each chromosome have optimized the weights, the Genetic Algorithm with Gaussian random number around the best chromosome can be used.
 
-The Genetic Algorithm searches the global minimum of the MSE function; these two algorithms have been created to improve it. While the Genetic Algorithm of CUDAANN r6 reaches a point near the global minimum,  these two algorithms described above  might refine the weights to get closer to the global minimum. These two algorithms need to be used carefully because generalisation could be affected.
+The Genetic Algorithm searches the global minimum of the MSE function; these two algorithms have been created to improve it. While the Genetic Algorithm of CUDAANN r6 reaches a point near the global minimum,  in some situations these two algorithms described above  might refine the weights to get closer to the global minimum. These two algorithms need to be used carefully because generalisation could be affected.
  
 while(GenerationNumber< maxGen && FitnessValues[bestIndividual]>error)\{
 
@@ -153,13 +155,13 @@ while(kk< nbCycleGaussBest && mFitnessValues[bestIndividual]>error)\{
 
 		kk++;
 
-		cycleGaussBest(); // Cycle with Gauss distribution around the best Chromosome
+		cycleGaussBest(); // Cycle with Gauss distribution around the best chromosome
 
 \}
 
-Explanation of the code: the program enters in a \code{while} loop and it will run until one of the two conditions happen to be \code{false}. The two conditions that need to be filled are: the fitness of the best chromosome should be smaller than the \code{error} chosen and the number of generations should be equal to the maximum number of generations chosen in \code{maxGen}. When these conditions are not filled, generations of normal cycles occur. The number set in \code{nbCycleGauss} provides the number of normal cycles before one gaussian cycle is processed. The gaussian cycles refine  all chromosomes with Gaussian random distribution number. 
+Explanation of the code: the program enters in a \code{while} loop and it will run until one of the two conditions happen to be \code{false}. The two conditions that need to be filled are: the fitness of the best chromosome should be smaller than the \code{error} chosen and the number of generations should be equal to the maximum number of generations chosen in \code{maxGen}. When these conditions are not filled, generations of normal cycles occur. The number set in \code{nbCycleGauss} provides the number of normal cycles before one Gaussian cycle is processed. The Gaussian cycles refine  all chromosomes with Gaussian random distribution number. 
 
-Once one of the two conditions is filled  refinements around the best chromosone can be made. This can improve the fitness result but generalisation could be affected. The refinement around the best chromosome has two conditions that need to be filled: the fitness of the best chromosome should be smaller than the error chosen and the number of generations should be equal to the maximum number of generations chosen in \code{nbCycleGaussBest}.
+Once one of the two conditions is filled,  refinements around the best chromosone can be made. This can improve the fitness result but generalisation could be affected. The refinement around the best chromosome has two conditions that need to be filled: the fitness of the best chromosome should be smaller than the error chosen and the number of generations should be equal to the maximum number of generations chosen in \code{nbCycleGaussBest}.
 
 
 
@@ -213,48 +215,32 @@ par( mfrow=c(2,2) )
                 plot(input, main="input should be in the range [0,1]")
 
 
-#maxGen  =10
-set.seed(123)
-res10           <-ANNGA(x    =input,
+
+#set.seed(123)
+#Example
+	        ANNGA(x    =input,
                 y       =output,
                 design  =c(1, 3, 1),
-                maxPop  =100,
+                population  =100,
                 mutation = 0.3,
                 crossover = 0.7,
                 maxGen  =10,
                 error   =0.001)
 
-set.seed(123)
-#maxGen  =100
-res100          <-ANNGA(x    =input,
-                y       =output,
-                design  =c(1, 3, 1),
-                maxPop  =100,
-                mutation = 0.3,
-                crossover = 0.7,
-                maxGen  =100,
-                bMaxGenerationSameResult = FALSE,
-                error   =0.001)
 
-set.seed(123)
-#maxGen  =1000
-res1000         <-ANNGA(x    =input,
-                y       =output,
-                design  =c(1, 3, 1),
-                maxPop  =100,
-                mutation = 0.3,
-                crossover = 0.7,
-                maxGen  =1000,
-                bMaxGenerationSameResult = FALSE,
-                error   =0.001)
+#for detail use 
+#demo(ANNGA)
 
-
+data("dataANN")
+demoResultANN
 par( mfrow=c(2,2) )
-plot(res10)
+plot(demoResultANN[[1]])
 title(sub="10 generations")
-plot(res100)
+
+plot(demoResultANN[[2]])
 title(sub="100 generations")
-plot(res1000)
+
+plot(demoResultANN[[3]])
 title(sub="1000 generations")
 
 }
