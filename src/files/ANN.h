@@ -2,7 +2,7 @@
 // ANN.h: Artificial Neural Network optimized by Genetic Algorithm 
 //
 // Copyright (C) 2009, 2010 Emre Caglar
-// Copyright (C) 2011 Francis Roy-Desrosiers
+// Copyright (C) 2011-2012 Francis Roy-Desrosiers
 //
 // This file is part of ANN.
 //
@@ -18,8 +18,8 @@
 // You should have received a copy of the GNU General Public License
 // along with ANN.  If not, see <http://www.gnu.org/licenses/>.
 ////////////////////////////////////////////////////////////////////
-#ifndef ARTIFICIAL_NEURAL_NETWORK
-#define ARTIFICIAL_NEURAL_NETWORK
+#ifndef ARTIFICIAL_NEURAL_NETWORK_H
+#define ARTIFICIAL_NEURAL_NETWORK_H
 
 class ArtificialNeuralNetwork{
 

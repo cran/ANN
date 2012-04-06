@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////
 // Training.cpp: Artificial Neural Network optimized by Genetic Algorithm 
 // Based on CUDAANN r6 project
-// Copyright (C) 2011 Francis Roy-Desrosiers
+// Copyright (C) 2011-2012 Francis Roy-Desrosiers
 //
 // This file is part of ANN.
 //
@@ -18,8 +18,8 @@
 // along with ANN.  If not, see <http://www.gnu.org/licenses/>.
 ////////////////////////////////////////////////////////////////////
 
-#ifndef ANNTraining_H
-#define ANNTraining_H
+#ifndef ANNTRAINING_CPP
+#define ANNTRAINING_CPP
 #include "Training.h"
 #include "fstream"
 #include "iostream"
@@ -28,9 +28,9 @@
 #include <Rmath.h>
 #include <vector>
 
-//#ifdef _OPENMP
-//#include <omp.h>
-//#endif
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 
 
@@ -38,57 +38,39 @@ using namespace std;
 
 inline  double unifRand(double min, double max)
 {   
-GetRNGstate();
-double final =unif_rand() * (max - min ) + min;
- PutRNGstate();
-return final;
-
+return (rand() * ((max - min) / (double)RAND_MAX)) + min;
 }
 
 
-int unifRandInt(int lower,int upper)
+inline int unifRandInt(int lower,int upper)
 {
-GetRNGstate();
-int final = ((int)(unif_rand() * (upper - lower + 1)) + lower);
- PutRNGstate();
-   return final;
+return (int)(rand() % (upper - lower + 1) + lower);
 }
 
 
 
 
 //Constructor for ANNGA.default
-ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double **tmatIn,double **tmatOut,int iMaxPopulation,double dmutRate,double dcrossRate,double dminW,double dmaxW, int iMaxGenerationSameResult,bool bMaxGenerationSameResult,double passSigma, double passProbGauss, bool rprintBestChromosome, int passCores){	
-		
+ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double **tmatIn,double **tmatOut,int iMaxPopulation,double dmutRate,double dcrossRate,double dminW,double dmaxW,  bool rprintBestChromosome, int passThreads, unsigned int seed){
+	
+			srand (seed); //SET SEED
 			mPopulationSize		= iMaxPopulation;
-			mfMutationRate		= dmutRate;
-			maxGenerationSameResult	= iMaxGenerationSameResult;
-			boolMaxGenerationSameResult	= bMaxGenerationSameResult;
-			mfCrossoverRate		= crossRate;
 			mLayerNum		= nbLayers;
-			mGenerationNumber	= 0;
-			trainInput		= 0;
-			desiredOutput		= 0;
+			mGenerationNumber	= 1;
 			MaxPopulation		=iMaxPopulation;
 			mutRate			=dmutRate;
 			crossRate		=dcrossRate;	
 			minW			=dminW;
 			maxW			=dmaxW;	
 			meanFitness		=0;
-			sigma			=passSigma;
-			probGauss		=passProbGauss;
-			printBestChromosome =rprintBestChromosome;
-			rateModificationMutRate=0.9;
-			lastGenerationBest=999999999; //initialisation to this number because no population should be that size
-			generationSameResult=0;
-			
-			num_of_threads = passCores;
+			printBestChromosome 	=rprintBestChromosome;
 
-
-			//#ifdef _OPENMP
-			//omp_set_num_threads(num_of_threads);
-			//#endif
-			
+			/*
+			num_of_threads = passThreads;
+			#ifdef _OPENMP
+			omp_set_num_threads(num_of_threads);
+			#endif
+			*/
 
 			ann = new ArtificialNeuralNetwork(nbLayers,neuronPerLayer);
 
@@ -96,7 +78,6 @@ ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double
 			mNeuronNum = new int[nbLayers];
 			for(int i = 0 ; i < nbLayers ; i++)
 				mNeuronNum[i] = neuronPerLayer[i];
-
 
 			//find the total connection number between neurons 
 			 mWeightConNum = 0;			
@@ -107,58 +88,38 @@ ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double
 			diff = new double[mWeightConNum];
 			crossedTrialIndividual = new double[mWeightConNum];
 
+			//create fitness vector
+			mFitnessValues = new double[mPopulationSize]; 
+			//fitness i is the fitness value related to i th individual mChromosomes[i] 
 
-			 //create fitness vector
-			 mFitnessValues = new double[mPopulationSize]; //fitness i is the fitness value related to i th individual mChromosomes[i] 
-
-			 //create population vectors
-			 mChromosomes = new Chromosome[mPopulationSize];
+			//create population vectors
+			mChromosomes = new Chromosome[mPopulationSize];
 			int ii;
 			 
-			 for(ii = 0 ; ii < mPopulationSize ; ii++){
-				 mChromosomes[ii] = new double[mWeightConNum];
-				mFitnessValues[ii] = 0; //CAREFUL!! maybe u should initialize to some other value
-			 }
+			for(ii = 0 ; ii < mPopulationSize ; ii++){
+				mChromosomes[ii] = new double[mWeightConNum];
+				mFitnessValues[ii] = 0; 
+			}
 			 
-			 //read training data to memory
-
-
 			nbOfData		= lengthData;
 			nbOfInput		= neuronPerLayer[0];
 			nbOfOutput		= neuronPerLayer[nbLayers-1];
 
-
-			dataIn = new double*[nbOfData];
-			dataOut = new double*[nbOfData];
+			dataIn = tmatIn;
+			dataOut = tmatOut;
 			outputANN = new double*[nbOfData];
 
-			
 			for(ii = 0 ; ii < nbOfData ; ii++){
-				dataIn[ii] = new double[nbOfInput];
-				dataOut[ii] = new double[nbOfOutput];
 				outputANN[ii] = new double[nbOfOutput];
-				for(int j = 0 ; j < nbOfInput ; j++){
-					//dataIn[ii][j]  = tmatIn[ii][j];
-				dataIn[ii][j]=tmatIn[ii][j];				
-				}
-				for(int j = 0 ; j < nbOfOutput ; j++){
-					dataOut[ii][j] = tmatOut[ii][j];
-				}
-	
 			}
 
-			vectorFitness.clear();
-
-
-
-			
+			vectorFitness.clear();			
 }
-
 //Constructor for predict.ANN
 ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double **tmatIn){
 		
 			mLayerNum		= nbLayers;
-			rateModificationMutRate=0.9;
+			
 			//create neural network 
 			ann = new ArtificialNeuralNetwork(nbLayers,neuronPerLayer);
 			//save neuron numbers in each layer
@@ -168,97 +129,60 @@ ANNTraining::ANNTraining(int nbLayers,int * neuronPerLayer,int lengthData,double
 
 			//find the total connection number between neurons 
 			 mWeightConNum = 0;			
-			 for (int i = 1 ; i < nbLayers ; i++){
+			 for (int i = 1 ; i < nbLayers ; i++)
 				 mWeightConNum +=neuronPerLayer[i] * neuronPerLayer[i-1] + mNeuronNum[i];
-			 }
-
 
 			nbOfData		= lengthData;
 			nbOfInput		= neuronPerLayer[0];
 			nbOfOutput		= neuronPerLayer[nbLayers-1];
 
-			//allocate memory for input data - represented as 2D matrix - 
-			dataIn = new double*[nbOfData];
-			for(int i = 0 ; i < nbOfData ; i++)
-				dataIn[i] = new double[nbOfInput];
+
+			dataIn  = tmatIn;
 
 			//allocate memory for output data - represented as 2D matrix - 
-
 			outputANN = new double*[nbOfData];
-			for(int i = 0 ; i < nbOfData ; i++){
+			for(int i = 0 ; i < nbOfData ; i++)
 				outputANN[i] = new double[nbOfOutput];
-			}
-			for(int i = 0 ; i < nbOfData ; i++){
-				for(int j = 0 ; j < nbOfInput ; j++){
-					dataIn[i][j]  = tmatIn[i][j];
-				}
-			}
-	
+
 }
-
-
-
-
-ANNTraining::~ANNTraining(){}
-
-
 ////////////////////////////////////////////
-void ANNTraining::calculateAllFitnessOfPopulation (){
+ANNTraining::~ANNTraining(){}
+////////////////////////////////////////////
+void ANNTraining::statPop (){ 
 	
 	meanFitness=0;
+	double best 	= 1000000000.0;		
+	int tempB 	= 0;
+	int i;
 	
-	for(int i = 0 ; i < mPopulationSize ; i++){
-		mFitnessValues[i] =getFitness (mChromosomes[i]);
-		meanFitness= meanFitness + mFitnessValues[i];
-	}
-	meanFitness=meanFitness/(double)mPopulationSize;
-
-	//find the best individual and save it
-	double best = 999999999;		
-	double worst = 0;
-	int tempB = 0;
-	int tempW = 0;
-
-
 	for(int i = 0 ; i < mPopulationSize ; i++){ 
+		//mFitnessValues[i] =getFitness (mChromosomes[i]); 
+
+		meanFitness+= mFitnessValues[i];
+
 		if(mFitnessValues[i] < best){
 			best = mFitnessValues[i];
 			tempB = i;
 		}
-		if(mFitnessValues[i] > worst){
-			worst = mFitnessValues[i];
-			tempW = i;
-		}
 	}
 	
+	meanFitness=meanFitness/(double)mPopulationSize;
 	bestIndividual  = tempB;
-	worstIndividual  = tempW;
-	worstIndividual  = 2; 
 	bestChromosome=mChromosomes[bestIndividual];	                             
 }
 ////////////////////////////////////////////
-
-/*void ANNTraining::printFitness (){
-	cout<<"generation: "<<mGenerationNumber<<"  min fitness value: "<<getMinFitness () <<endl;
-}*/
-
-
-////////////////////////////////////////////
 void  ANNTraining::initializePopulation(){
 
-	
 	int i;
 	 
 	for(i = 0 ; i < mPopulationSize ; i++){
 		for(int j = 0 ; j < mWeightConNum ; j++){
 			mChromosomes[i][j] = unifRand(minW, maxW);
 		}
+		mFitnessValues[i] =getFitness (mChromosomes[i]);
 	}
 
-	calculateAllFitnessOfPopulation ();
-	
-
-
+	statPop ();
 }
 ////////////////////////////////////////////
 void	ANNTraining::mutate(int v){
@@ -283,9 +207,7 @@ void	ANNTraining::crossover(int v){
 	int i;
 	
 	for( i = 0 ; i < mWeightConNum ; i++){
- 		GetRNGstate();
-		ran = unif_rand();
-		PutRNGstate();
+		ran =	unifRand(0.0,1.0);
 		if(ran < crossRate){
 			crossedTrialIndividual[i] = diff[i];
 		}else{
@@ -295,60 +217,17 @@ void	ANNTraining::crossover(int v){
 }
 ////////////////////////////////////////////
 void		ANNTraining::select(int v){
-	//Here the getFitness (mChromosomes[v]) should be the same as mFitnessValues[v]
-	if(getFitness (crossedTrialIndividual) < getFitness (mChromosomes[v])){
+
+	double fitnessTrialIndividual = getFitness (crossedTrialIndividual);
+	if(fitnessTrialIndividual <  mFitnessValues[v]){
 		int i;
 		 
 		for( i = 0 ; i < mWeightConNum ; i++){
 			mChromosomes[v][i] =crossedTrialIndividual[i];
-		}	
+		}
+		mFitnessValues[v]=fitnessTrialIndividual;	
 	}	
 }
-
-
-void	ANNTraining::crossoverGauss(int v){
-	//if(!(bestIndividual==v)){
-	double ran;
-	int i;
-	
-	for(i = 0 ; i < mWeightConNum ; i++){
- 		GetRNGstate();
-		ran = unif_rand();
-		PutRNGstate();
-		if(ran < probGauss){
-			GetRNGstate();
-			crossedTrialIndividual[i]=mChromosomes[v][i]+norm_rand()*sigma;
-			PutRNGstate();
-		}else{
-			crossedTrialIndividual[i]=mChromosomes[v][i];
-		}
-	}
-	//}
-}
-void	ANNTraining::crossoverGaussBest(int v){
-	//if(!(bestIndividual==v)){
-	double ran;
-	int i;
-	
-	for(i = 0 ; i < mWeightConNum ; i++){
-		GetRNGstate();
-		ran = unif_rand();
-		PutRNGstate();
-		if(ran < probGauss){
-			GetRNGstate();
-			crossedTrialIndividual[i]=mChromosomes[bestIndividual][i]+norm_rand()*sigma;
-			PutRNGstate();
-		}else{
-			crossedTrialIndividual[i]=mChromosomes[bestIndividual][i];
-		}
-	}
-	//}
-}
-
-
-
-
-
 ////////////////////////////////////////////					    
 double		ANNTraining::getFitness(Chromosome individual){
 
@@ -361,13 +240,10 @@ double		ANNTraining::getFitness(Chromosome individual){
 	return sumError/(double)nbOfData;	
 }
 ////////////////////////////////////////////
-void		ANNTraining::setANNweightsWithBestChromosome(){/////////////////////////////////////////////should 
-ann->loadWights (bestChromosome);	
-}
-////////////////////////////////////////////
-void ANNTraining::getANNresult(){
+void ANNTraining::getANNresult(bool loadBest=true){
 
-	ann->loadWights (mChromosomes[bestIndividual]);
+	if(loadBest) ann->loadWights (mChromosomes[bestIndividual]);
+
 	for(int i = 0 ; i < nbOfData ; i++){  
 		ann->feedForward (dataIn[i]);
 		ann->getOutput(i);
@@ -377,182 +253,55 @@ void ANNTraining::getANNresult(){
 	}
 }
 ////////////////////////////////////////////
-void ANNTraining::predictANN(){
-
-	for(int i = 0 ; i < nbOfData ; i++){       
-		ann->feedForward (dataIn[i]);
-		ann->getOutput(i);
-		for(int j = 0 ; j < nbOfOutput ; j++){
-			outputANN[i][j] = ann->getOutput(j);
-		}
-	}
-}
-
-//each cycle consist on mutation,crossover and select operations for all individual
 void		ANNTraining::cycle (bool print = false){
-Rprintf ("\n***cycle***\n");
+	Rprintf ("\n***cycle***\n");
 	for(int i = 0 ; i < mPopulationSize ; i++){
-			mutate(i);
-			crossover(i);
-			select(i);
+		mutate(i);
+		crossover(i);
+		select(i);
 	}
 
-	calculateAllFitnessOfPopulation();
+	statPop();
 	
-	if(print==true){
-		printFitness (bestIndividual);
-	}
+	if(print==true){printFitness (bestIndividual);}
 
-	if(lastGenerationBest==mFitnessValues[bestIndividual]){
-		generationSameResult+=1;
-	}else{
-		generationSameResult=1;
-		lastGenerationBest=mFitnessValues[bestIndividual];
-	}
-
-	if(boolMaxGenerationSameResult==true){
-		if(generationSameResult==maxGenerationSameResult){
-			Rprintf("Old mutation Rate %4.8f  \n", mfMutationRate);
-			mfMutationRate=mfMutationRate*rateModificationMutRate;
-			Rprintf("New mutation Rate %4.8f  \n", mfMutationRate);
-		}
-	}
-	++mGenerationNumber;
+	++mGenerationNumber;				
 	vectorFitness.push_back (mFitnessValues[bestIndividual]);
 }
-
-void		ANNTraining::cycleGauss (bool print = false){
-
-Rprintf ("\n***cycleGauss***\n");
-
-	for(int i = 0 ; i < mPopulationSize ; i++){
-			crossoverGauss(i);
-			select(i);
-	}
-
-	calculateAllFitnessOfPopulation();
-
-	for(int i = 0 ; i < mPopulationSize ; i++){
-			mutate(i);
-			crossover(i);
-			select(i);
-	}
-
-	calculateAllFitnessOfPopulation();
-
-
-	if(print==true){
-		printFitness (bestIndividual);
-	}
-
-	if(lastGenerationBest==mFitnessValues[bestIndividual]){
-		generationSameResult+=1;
-	}else{
-		generationSameResult=1;
-		lastGenerationBest=mFitnessValues[bestIndividual];
-	}
-
-	if(boolMaxGenerationSameResult==true){
-		if(generationSameResult>=maxGenerationSameResult){
-			Rprintf("\n\n\n\n*********************\nOld mutation Rate %4.8f  \n", mfMutationRate);
-			mfMutationRate=mfMutationRate*rateModificationMutRate;
-			Rprintf("New mutation Rate %4.8f  \n*********************\n\n\n\n\n", mfMutationRate);
-			generationSameResult=0;
-		}
-	}
-	++mGenerationNumber;
-	vectorFitness.push_back (mFitnessValues[bestIndividual]);
-}
-
-void		ANNTraining::cycleGaussBest (bool print = false){
-Rprintf ("\n***cycleGaussBest***\n");
-
-	for(int i = 0 ; i < mPopulationSize ; i++){
-		if( !(i == bestIndividual)){
-			crossoverGaussBest(i);
-		}
-	}
-
-	calculateAllFitnessOfPopulation();
-
-	for(int i = 0 ; i < mPopulationSize ; i++){
-			mutate(i);
-			crossover(i);
-			select(i);
-	}
-
-	calculateAllFitnessOfPopulation();
-
-	if(print==true){
-		printFitness (bestIndividual);
-	}
-
-	if(lastGenerationBest==mFitnessValues[bestIndividual]){
-		generationSameResult+=1;
-	}else{
-		generationSameResult=1;
-		lastGenerationBest=mFitnessValues[bestIndividual];
-	}
-
-	if(boolMaxGenerationSameResult==true){
-		if(generationSameResult>=maxGenerationSameResult){
-			Rprintf("\n\n\n\n*********************\nOld mutation Rate %4.8f  \n", mfMutationRate);
-			mfMutationRate=mfMutationRate*rateModificationMutRate;
-
-			Rprintf("New mutation Rate %4.8f  \n*********************\n\n\n\n\n", mfMutationRate);
-			generationSameResult=0;
-		}
-	}
-	++mGenerationNumber;
-	vectorFitness.push_back (mFitnessValues[bestIndividual]);
-}
-
-
+////////////////////////////////////////////
 void ANNTraining::printFitness (int i){
 
-	printf("Generation:  %d  Best population fitness : %4.8f  Mean of population:%4.8f  ", mGenerationNumber, mFitnessValues[i],meanFitness);
+	Rprintf("Generation:  %d  Best population fitness : %4.8f Mean of population:%4.8f  ", mGenerationNumber, mFitnessValues[i],meanFitness);
 
 	if(printBestChromosome==true){	
-		printf("\n Best chromosome->");
+		Rprintf("\n Best chromosome->");
 		for(int j = 0 ; j < mWeightConNum ; j++){
-				printf("%4.2f/", mChromosomes[i][j]);
+				Rprintf("%4.2f/", mChromosomes[i][j]);
 		}
 	}
-	printf("\n");
+	Rprintf("\n");
 }
-
-
 ////////////////////////////////////////////
-double ANNTraining::getMinFitness(){	
+void		ANNTraining::release (){	
 
-	double min = mFitnessValues[0];
-	double max = mFitnessValues[0];//mine
-
-	for(int i = 1 ; i < mPopulationSize ; i++){
-		if(mFitnessValues[i] < min){
-			min = mFitnessValues[i];
-			bestIndividual = i;
-		}
-
-		if(mFitnessValues[i] > max){
-			max = mFitnessValues[i];
-			worstIndividual = i;
-		}
-	}
-
-	bestChromosome = mChromosomes[bestIndividual];
-	return min;
-}
-
-////////////////////////////////////////////
-void		ANNTraining::release (){
+	for (int i = 0; i < mPopulationSize; ++i)
+		delete [] mChromosomes[i];
 	delete [] mChromosomes;
+
 	delete [] mFitnessValues;
 	delete [] mNeuronNum; 
+	delete [] diff;
+	delete [] crossedTrialIndividual;
+	delete [] dataIn;
+	delete [] dataOut;
+
+	for(int i = 0 ; i < nbOfData ; i++)
+		delete [] outputANN[i];
+	delete [] outputANN;
+
 	ann->release ();
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////
 
 
 

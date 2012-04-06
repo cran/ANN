@@ -1,7 +1,7 @@
 ####################################################################
 ## ANNGA.R: Artificial Neural Network optimized by Genetic Algorithm 
 ##
-## Copyright (C) 2011 Francis Roy-Desrosiers
+## Copyright (C) 2011-2012 Francis Roy-Desrosiers
 ##
 ## This file is part of ANN.
 ##
@@ -34,13 +34,6 @@ function(x,
 	minW=-25,
 	maxGen=1000,
 	error=0.05,
-	iMaxGenerationSameResult=100,
-	bMaxGenerationSameResult=TRUE,
-	bCycleGauss=FALSE,
-	nbCycleGauss=1,
-	nbCycleGaussBest=0,
-	sigma=1,
-	probGauss=0.5,
 	printBestChromosone=TRUE,...)UseMethod("ANNGA")
 
 
@@ -55,34 +48,27 @@ function(x,
 	minW=-25,
 	maxGen=1000,
 	error=0.05,
-	iMaxGenerationSameResult=100,
-	bMaxGenerationSameResult=TRUE,
-	bCycleGauss=FALSE,
-	nbCycleGauss=1,
-	nbCycleGaussBest=0,
-	sigma=1,
-	probGauss=0.5,
 	printBestChromosone=TRUE,...) {
 
 
-	cores=1 #openMP code were added but not operationnal, still in developpement.
+	threads=1 #openMP, still in developpement.
 	input <- as.matrix(x)
 	output <- as.matrix(y)
-	if(any(is.na(x))) stop("missing values in 'x'")
-	if(any(is.na(y))) stop("missing values in 'y'")
-	if(dim(x)[1L] != dim(y)[1L]) stop("nrows of 'y' and 'x' must match")
-	if(dim(input)[1L] <=0) stop("nrows of 'x' and 'y' must be >0 ")
+	if(any(is.na(input))) stop("ERROR: missing values in 'x'")
+	if(any(is.na(output))) stop("ERROR: missing values in 'y'")
+	if(dim(input)[1L] != dim(output)[1L]) stop("ERROR: nrows of 'y' and 'x' must match")
+	if(dim(input)[1L] <=0) stop("ERROR: nrows of 'x' and 'y' must be >0 ")
 	if (population<20){
 		cat("The population should be over 20,maxPop=",population, "  , the default population is 100   \n")
 		population<-100
 	}
-	if(sigma<=0) stop("'sigma' must be positive")
-	if(!(probGauss>=0 & probGauss<=1)) stop("'probGauss' must be in [0,1]")
-	if(cores<=0) stop("'cores' must be positive")
+	if(threads<=0) stop("ERROR:  'threads' must be >0")
+
+	cppSeed<-sample.int(2147483647, 1) 
 	   
 	est <- .Call('ANNGA' ,              
-                x,
-		y, 
+                input,
+		output, 
 		as.integer(design),
 		as.integer(population),
 		as.numeric(mutation),
@@ -91,15 +77,9 @@ function(x,
 		as.numeric(minW),
 		as.integer(maxGen),
 		as.numeric(error),
-		as.integer(iMaxGenerationSameResult),
-		as.integer(bMaxGenerationSameResult),
-		as.integer(bCycleGauss),
-		as.integer(nbCycleGauss),
-		as.integer(nbCycleGaussBest),
-		as.numeric(sigma),
-		as.numeric(probGauss),
 		as.integer(printBestChromosone),
-		as.integer(cores),
+		as.integer(threads),
+		as.integer(cppSeed),
                 PACKAGE="ANN")
 
 	if(dim(output)[2]==1){est$R2<-1-sum((output-est$output)^2)/sum((output-mean(output))^2)}else{est$R2<-NULL}
@@ -115,7 +95,7 @@ function(x,
 print.ANN <-
 function(x,...)
 {
-	cat("Call:\n")
+	cat("\nCall:\n")
 	print(x$call)
 
 	cat("\n****************************************************************************")
@@ -124,26 +104,35 @@ function(x,...)
 	cat("\nR2---------------------------------------------->",x$R2) 
 	}else{cat("\nIf more than 1 output, R2 is not computed")}
 	cat("\nNumber of generation---------------------------->",x$nbOfGen)
-	cat("\nWeight range allowed----------------------------> [",x$maxW,",",x$minW,"]")
+	cat("\nWeight range at initialization------------------> [",x$maxW,",",x$minW,"]")
 	cat("\nWeight range resulted from the optimisation-----> [",max(x$bestChromosome),",",min(x$bestChromosome),"] ")
-	cat("\nMutation rate started at", x$startMutation ," and finished at",x$endMutation)
-	cat("\n****************************************************************************\n\n")
+	cat("\n****************************************************************************")
 
+	if(!(is.null(x$callpredict))){
+		cat("\n\nCall predict:\n")
+		print(x$callpredict)
+		cat("\n*the result from predict() is in $predict ")
+	cat("\n****************************************************************************")
+	}
+	cat("\n\n")
 }
 
 
 predict.ANN <-
 function(object,input,...)
 {
-	if (is.null(input)) stop("'input' is missing", call. = FALSE)
-	if(any(is.na(input))) stop("missing values in 'input'")
-	if(class(object)!="ANN") stop("object must be a ANN class ")
-	if(dim(input)[1L] <=0) stop("nrows of 'input' must be >0 ")
+cat("*predict ANN object \n")
 	input <- as.matrix(input)
-	est <- .Call("predictANNGA",               # either new or classic
+	if (is.null(input)) stop("ERROR: 'input' is missing", call. = FALSE)
+	if(any(is.na(input))) stop("ERROR: missing values in 'input'")
+	if(class(object)!="ANN") stop("ERROR: object must be a ANN class ")
+	if(dim(input)[1L] <=0) stop("ERROR: nrows of 'input' must be >0 ")
+	input <- as.matrix(input)
+	est <- .Call("predictANNGA",               
 		         input, object$nbNeuronPerLayer,object$bestChromosome,
 		         PACKAGE="ANN")
 	est$callpredict <- match.call()
+	est<-c(object,est)
 	class(est) <- "ANN"
 	est
 }
@@ -152,7 +141,7 @@ function(object,input,...)
 plot.ANN <-
 function(x,...)
 {
-	if(dim(x$desiredOutput)[2L]>1) stop("output must be univariate")
+	if(dim(x$desiredOutput)[2L]>1) stop("NOTE: to plot an ANN object output must be univariate")
 	#par(mfrow=c(1,1))
 	plot(x$desiredOutput,xlab="x axis", ylab="y axis")
 	lines(x$output,col="red")

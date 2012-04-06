@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////
 // Training.h: Artificial Neural Network optimized by Genetic Algorithm 
 // Based on CUDAANN project
-// Copyright (C) 2011 Francis Roy-Desrosiers
+// Copyright (C) 2011-2012 Francis Roy-Desrosiers
 //
 // This file is part of ANN.
 //
@@ -32,8 +32,7 @@ typedef double* Chromosome;
 class ANNTraining{
 
 public:	// to train the network
-	ANNTraining(int nbLayers , int * neuronPerLayer ,int lengthData, double **tmatIn, double **tmatOut,  int iMaxPopulation, double dmutRate, double dcrossRate ,double dminW, double dmaxW,int iMaxGenerationSameResult,bool bMaxGenerationSameResult,double passSigma, double passProbGauss, bool rprintBestChromosome, int passCores); 
-//	ANNTraining(int nbLayers , int * neuronPerLayer ,int lengthData, double *tmatIn, double *tmatOut,  int iMaxPopulation, double dmutRate, double dcrossRate ,double dminW, double dmaxW,int iMaxGenerationSameResult,bool bMaxGenerationSameResult,double passSigma, double passProbGauss, bool rprintBestChromosome, int passCores); 	
+	ANNTraining(int nbLayers , int * neuronPerLayer ,int lengthData, double **tmatIn, double **tmatOut,  int iMaxPopulation, double dmutRate, double dcrossRate ,double dminW, double dmaxW,bool rprintBestChromosome, int passThreads, unsigned int seed); 	
 	// to predict from a trained the network
 	ANNTraining(int nbLayers , int * neuronPerLayer ,int lengthData, double **tmatIn); 
 	
@@ -42,8 +41,6 @@ public:	// to train the network
 	void		initializePopulation();
 	void		mutate(int);
 	void		crossover(int);
-	void		crossoverGauss(int v);
-	void		crossoverGaussBest(int v);
 	void		select(int);
 	int 		MaxPopulation;
 	double 		mutRate;
@@ -51,47 +48,28 @@ public:	// to train the network
 	double 		minW;
 	double 		maxW;	
 	double 		meanFitness;
-	double		sigma;
-	double		probGauss;
 	
-	void		calculateAllFitnessOfPopulation();	
+	void		statPop();	
 	void		release();
 	void		cycle(bool);
-	void		cycleGauss (bool);
-	void		cycleGaussBest (bool);
-	void		printFitness();
 	void		printFitness(int);
-	double		getMinFitness();
-	double		getFitness(Chromosome individual);
-	void		setANNweightsWithBestChromosome();
-	void		getANNresult();
-	void		predictANN();
+	double		getFitness(Chromosome);
+	void		getANNresult(bool);
 
 	Chromosome	*mChromosomes;		//population  - solution space
 	Chromosome      bestChromosome;
-	Chromosome	worstChromosome;
 	int		bestIndividual;
-	int		worstIndividual;
 
 	double		*mFitnessValues;
 	int		mPopulationSize;
-	float		mfMutationRate;
-	float		rateModificationMutRate;
-	float		mfCrossoverRate;
 	int		mLayerNum;
 	int		*mNeuronNum;
-	int		mWeightConNum;    //number of weight connections between neurons
+	int		mWeightConNum;    	//number of weight connections between neurons
 	int		mGenerationNumber;
-	int		generationSameResult;
-	double		lastGenerationBest;
-	int 		maxGenerationSameResult;
-	bool		boolMaxGenerationSameResult;
 	bool		printBestChromosome;
 	int 		num_of_threads;	
 	
 	ArtificialNeuralNetwork* ann;
-	double* 	trainInput;
-	double* 	desiredOutput;
 
 	Chromosome 	diff;
 	Chromosome  	crossedTrialIndividual;

@@ -40,40 +40,30 @@ Francis Roy-Desrosiesrs
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 %}
 \examples{
-require(ANN)
-set.seed(123)
-t               <-seq(0, 2 * pi, 0.01)
-output1         <-matrix( sin(t) )
-output2         <-matrix( sin(t) + 0.5 * rnorm( length(t) ) )
 
-fctLogistic <-  function(input) 
-{
-        input   <-as.vector(input)
-        logit   <- 1/(1 + exp( -input ))
-        return(logit)
-} 
 
-output          <-matrix( fctLogistic(output2) )
-input           <-matrix( seq( 0, 1, length.out=length(t) ) )
+#use the command demo(ANN) to see how dataANN was created 
+data("dataANN")
 
 par( mfrow=c(2,2) )
-                plot(output1, main="sin")
-                plot(output2, main="sin + 0.5 * rnorm")
+                plot(sin(t), main="sin")
+                plot(noisy_sin, main="sin + 0.5 * rnorm")
                 plot(output, main="sin + 0.5 * rnorm in [0,1]")
                 plot(input, main="input should be in the range [0,1]")
 
 
-data("dataANN")
 demoResultANN
-ANNObject<-demoResultANN[[3]]
-#to compute demoResultANN use :demo(ANNGA)
 
-par( mfrow=c(1,1) )
-print(ANNObject)
+ANNObject<-demoResultANN[[3]]
+
+
+ANNObject 	#or print(ANNObject)
 plot(ANNObject)
 
-predictRes      <-predict( ANNObject, input )
-plot(predictRes$output,main="Predicted Output")
+
+p		<-predict( ANNObject, input )
+p
+plot(p$predict,main="Predicted Output")
 
 
 }

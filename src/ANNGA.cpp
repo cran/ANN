@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////
 // RcppANNGA.cpp: Artificial Neural Network optimized by Genetic Algorithm 
 //
-// Copyright (C) 2011 Francis Roy-Desrosiers
+// Copyright (C) 2011-2012 Francis Roy-Desrosiers
 //
 // This file is part of ANN.
 //
@@ -39,15 +39,9 @@ SEXP ANNGA(SEXP matrixInput,
 	SEXP minW, 
 	SEXP maxGen, 
 	SEXP error,
-	SEXP riMaxGenerationSameResult,
-	SEXP rbMaxGenerationSameResult,
-	SEXP rbCycleGauss,
-	SEXP rnbCycleGauss,
-	SEXP rnbCycleGaussBest,
-	SEXP rsigma,
-	SEXP rprobGauss,
 	SEXP rprintBestChromosome,
-	SEXP rcores) {
+	SEXP rthreads,
+	SEXP rCppSeed) {
 
 
 ////////////////////////////////////////////////////////
@@ -96,15 +90,9 @@ SEXP ANNGA(SEXP matrixInput,
 	double 	dminW		=REAL(minW)[0];
 	int 	imaxGen		=INTEGER(maxGen)[0];
 	double 	derror		=REAL(error)[0];
-	int 	iMaxGenerationSameResult= INTEGER(riMaxGenerationSameResult)[0];
-	bool 	bMaxGenerationSameResult= (bool)INTEGER(rbMaxGenerationSameResult)[0];
-	int 	nbCycleGaussBest=INTEGER(rnbCycleGaussBest)[0];
-	int 	nbCycleGauss	=INTEGER(rnbCycleGauss)[0];
-	bool	bCycleGauss 	= (bool)INTEGER(rbCycleGauss)[0];
-	double 	dsigma		=REAL(rsigma)[0];	
-	double 	dprobGauss	=REAL(rprobGauss)[0];	
 	bool	printBestChromosome = (bool)INTEGER(rprintBestChromosome)[0];
-	int	cores 		= INTEGER(rcores)[0];
+	int	threads 	= INTEGER(rthreads)[0];
+	int	cppSeed		= INTEGER(rCppSeed)[0];
 
 
 ////////////////////////////////////////////////////////
@@ -112,7 +100,7 @@ SEXP ANNGA(SEXP matrixInput,
 ////////////////////////////////////////////////////////
 
 
-	ANNTraining *ANNT= new ANNTraining(nbOfLayer , nbNeuronPerLayer ,lengthData, matIn, matOut, iMaxPop, dmutation,  dcrossover, dminW, dmaxW, iMaxGenerationSameResult, bMaxGenerationSameResult, dsigma, dprobGauss, printBestChromosome,cores);
+	ANNTraining *ANNT= new ANNTraining(nbOfLayer , nbNeuronPerLayer ,lengthData, matIn, matOut, iMaxPop, dmutation,  dcrossover, dminW, dmaxW, printBestChromosome, threads, cppSeed);
 
 
 ////////////////////////////////////////////////////////
@@ -121,26 +109,13 @@ SEXP ANNGA(SEXP matrixInput,
 
 
 	ANNT->initializePopulation ();
-	ANNT->getMinFitness ();
 
-	int kk=0;
-	while(ANNT->mGenerationNumber< imaxGen && ANNT->mFitnessValues[ANNT->bestIndividual]>derror){
-		ANNT->cycle (true); //Normal cycle
-		kk++;		
-		if(kk==nbCycleGauss){
-			kk=0;
-			if(bCycleGauss==true){
-				ANNT->cycleGauss (true); // Cycle with gauss distribution around each Chromosomes
-			}	
-		}
-	}
-	kk=0;
-	while(kk< nbCycleGaussBest && ANNT->mFitnessValues[ANNT->bestIndividual]>derror){
-			kk++;
-			ANNT->cycleGaussBest (true); // Cycle with gauss distribution around the best Chromosomes
+
+	while(ANNT->mGenerationNumber<= imaxGen && ANNT->mFitnessValues[ANNT->bestIndividual]>derror){
+		ANNT->cycle (true); 
 	}
 
-	ANNT->getANNresult();
+	ANNT->getANNresult(true);
 
 
 ////////////////////////////////////////////////////////
@@ -152,7 +127,7 @@ SEXP ANNGA(SEXP matrixInput,
 	PROTECT(list = allocVector(VECSXP, 16));    
 	PROTECT(list_names = allocVector(VECSXP,16));
 
-	SEXP output, chromosome, mse, nbOfGen, dendmutation, RvectorFitness;
+	SEXP output, chromosome, mse, nbOfGen, RvectorFitness;
 
 	SET_VECTOR_ELT(list_names,0,mkChar("input"));
 	SET_VECTOR_ELT(list, 0, matrixInput);
@@ -162,7 +137,6 @@ SEXP ANNGA(SEXP matrixInput,
 
 
 	PROTECT(output = allocMatrix(REALSXP, lengthData, kOut));
-	//RcppMatrix<double> output(lengthData, kOut); 	// reserve n by k matrix
 	for (int i=0; i<lengthData; i++) {
 	    for (int j=0; j<kOut; j++) {
 		REAL(output)[i+lengthData*j] = ANNT->outputANN[i][j];
@@ -180,53 +154,53 @@ SEXP ANNGA(SEXP matrixInput,
 	SET_VECTOR_ELT(list_names,5,mkChar("startMutation"));
 	SET_VECTOR_ELT(list, 5, mutation);
 
-	PROTECT(dendmutation 	= allocVector(REALSXP,1 ));
-	REAL(dendmutation)[0]	=ANNT->mfMutationRate;			
+	/*PROTECT(dendmutation 	= allocVector(REALSXP,1 ));
+	REAL(dendmutation)[0]	=ANNT->crossRate;			
 	SET_VECTOR_ELT(list_names,6,mkChar("endMutation"));
-	SET_VECTOR_ELT(list, 6, dendmutation);
+	SET_VECTOR_ELT(list, 6, dendmutation);*/
 
-	SET_VECTOR_ELT(list_names,7,mkChar("crossover"));
-	SET_VECTOR_ELT(list, 7, crossover);
+	SET_VECTOR_ELT(list_names,6,mkChar("crossover"));
+	SET_VECTOR_ELT(list, 6, crossover);
 
-	SET_VECTOR_ELT(list_names,8,mkChar("maxW"));
-	SET_VECTOR_ELT(list, 8, maxW);
+	SET_VECTOR_ELT(list_names,7,mkChar("maxW"));
+	SET_VECTOR_ELT(list, 7, maxW);
 
-	SET_VECTOR_ELT(list_names,9,mkChar("minW"));
-	SET_VECTOR_ELT(list, 9, minW);
+	SET_VECTOR_ELT(list_names,8,mkChar("minW"));
+	SET_VECTOR_ELT(list, 8, minW);
 
-	SET_VECTOR_ELT(list_names,10,mkChar("maxGen"));
-	SET_VECTOR_ELT(list, 10, maxGen);
+	SET_VECTOR_ELT(list_names,9,mkChar("maxGen"));
+	SET_VECTOR_ELT(list, 9, maxGen);
 	
-	SET_VECTOR_ELT(list_names,11,mkChar("desiredEror"));
-	SET_VECTOR_ELT(list, 11, error);
+	SET_VECTOR_ELT(list_names,10,mkChar("desiredEror"));
+	SET_VECTOR_ELT(list, 10, error);
 
 	PROTECT(chromosome = allocVector(REALSXP,ANNT->mWeightConNum ));
 	for (int i=0; i<ANNT->mWeightConNum; i++) {
 		REAL(chromosome)[i] = ANNT->mChromosomes[ANNT->bestIndividual][i];
 	}
-	SET_VECTOR_ELT(list_names,12,mkChar("bestChromosome"));
-	SET_VECTOR_ELT(list, 12, chromosome);
+	SET_VECTOR_ELT(list_names,11,mkChar("bestChromosome"));
+	SET_VECTOR_ELT(list, 11, chromosome);
 
 	PROTECT(mse	 	= allocVector(REALSXP,1 ));
 	REAL(mse)[0]		=ANNT->mFitnessValues[ANNT->bestIndividual];
-	SET_VECTOR_ELT(list_names,13,mkChar("mse"));
-	SET_VECTOR_ELT(list,13, mse);
+	SET_VECTOR_ELT(list_names,12,mkChar("mse"));
+	SET_VECTOR_ELT(list,12, mse);
 
 	PROTECT(nbOfGen	 	= allocVector(INTSXP,1 ));
 	INTEGER(nbOfGen)[0]	=ANNT->mGenerationNumber;
-	SET_VECTOR_ELT(list_names,14,mkChar("nbOfGen"));
-	SET_VECTOR_ELT(list, 14, nbOfGen);
+	SET_VECTOR_ELT(list_names,13,mkChar("nbOfGen"));
+	SET_VECTOR_ELT(list, 13, nbOfGen);
 
 	PROTECT(RvectorFitness = allocVector(REALSXP,(int)ANNT->vectorFitness.size() ));
 	for (int i=0; i<(int)ANNT->vectorFitness.size(); i++) {
 		REAL(RvectorFitness)[i] = ANNT->vectorFitness[i];	
 	}
-	SET_VECTOR_ELT(list_names,15,mkChar("vectorFitness"));
-	SET_VECTOR_ELT(list, 15, RvectorFitness);
+	SET_VECTOR_ELT(list_names,14,mkChar("vectorFitness"));
+	SET_VECTOR_ELT(list, 14, RvectorFitness);
 
 	setAttrib(list, R_NamesSymbol, list_names);
-	//ANNT->release (); //release the memory, TO DO, NOT WORKING
-	UNPROTECT(8);
+	ANNT->release (); //release the memory, TO DO, NOT WORKING
+	UNPROTECT(7);
 
 return list;    
 }
@@ -270,7 +244,8 @@ SEXP predictANNGA(SEXP matrixInput,SEXP design, SEXP chromosome) {
 
 	ANNTraining *ANNT= new ANNTraining(nbOfLayer , nbNeuronPerLayer ,lengthData, matIn);
 	ANNT->ann->loadWights (cppChromosome);
-	ANNT->predictANN();
+	ANNT->getANNresult(false);
+
 
 
 ////////////////////////////////////////////////////////
@@ -288,13 +263,12 @@ SEXP predictANNGA(SEXP matrixInput,SEXP design, SEXP chromosome) {
 		REAL(output)[i+lengthData*j] = ANNT->outputANN[i][j];
 	    }
 	}
-	SET_VECTOR_ELT(list_names,0,mkChar("output"));
+	SET_VECTOR_ELT(list_names,0,mkChar("predict"));
 	SET_VECTOR_ELT(list, 0, output);
 
 	setAttrib(list, R_NamesSymbol, list_names);
 	//ANNT->release (); //release the memory, TO DO NOT WORKING
 	UNPROTECT(3);
-
     return list;
 }
 

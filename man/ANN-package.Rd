@@ -15,8 +15,8 @@ This package provides a feedforward Artificial Neural Network (ANN)
 \tabular{ll}{
 Package: \tab ANN\cr
 Type: \tab Package\cr
-Version: \tab 0.1.2 Beta\cr
-Date: \tab 2011-11-22\cr
+Version: \tab 0.1.4\cr
+Date: \tab 2012-04-06\cr
 License: \tab GPL-3 \cr
 LazyLoad: \tab yes\cr
 
@@ -45,7 +45,7 @@ In this package, the activation function is sigmoid: \eqn{f(x) = \frac{1}{1+e^{-
 
 
 
-Several methods of minimisation are available. In this package, the  Genetic Algorithm is used to solve the problem of estimating the connections' weights. Genetic Algorithm is based on natural evolution.  A population of chromosomes is initialised with random numbers. In our case a chromosome is an array of doubles corresponding to weights. This population of chromosomes evolves within every generation; mutation and crossover occur in all chromosomes.  Mutation ( \eqn{w^{new}_{j,i}=w_{k,i}+mutationRate*(w_{n,j}-w_{m,i}) }) consists of adding a weight \eqn{i} from a random chromosome to the difference of the weight \eqn{i} of two other random chromosomes multiplied by the mutation rate, where \eqn{w_{k,i}} is the \eqn{i}th weight of the \eqn{k}th chromosome and \eqn{k}, \eqn{n}, \eqn{m} are randomly choosen within the set of chromosomes population and \eqn{k}, \eqn{n}, \eqn{m} are not equal. The crossover consists of changing each chromosome's weights to the  mutation weight with the probability of the crossover rate. Then, it replaces the old chromosome with the new one if the MSE of the new chromosome is smaller. This algorithm of minimisation was taken from "CUDAANN r6 project" developed by Emre Caglar. Two variants of this algorithm are implemented in this package and as described below.
+Several methods of minimisation are available. In this package, the  Genetic Algorithm is used to solve the problem of estimating the connections' weights. Genetic Algorithm is based on natural evolution.  A population of chromosomes is initialised with random numbers. In our case a chromosome is an array of doubles corresponding to weights. This population of chromosomes evolves within every generation; mutation and crossover occur in all chromosomes.  Mutation ( \eqn{w^{new}_{j,i}=w_{k,i}+mutationRate*(w_{n,j}-w_{m,i}) }) consists of adding a weight \eqn{i} from a random chromosome to the difference of the weight \eqn{i} of two other random chromosomes multiplied by the mutation rate, where \eqn{w_{k,i}} is the \eqn{i}th weight of the \eqn{k}th chromosome and \eqn{k}, \eqn{n}, \eqn{m} are randomly choosen within the set of chromosomes population and \eqn{k}, \eqn{n}, \eqn{m} are not equal. The crossover consists of changing each chromosome's weights to the  mutation weight with the probability of the crossover rate. Then, it replaces the old chromosome with the new one if the MSE of the new chromosome is smaller. This algorithm was originaly developed  by Emre Caglar in "CUDAANN r6 project". 
 
 }
 \author{
